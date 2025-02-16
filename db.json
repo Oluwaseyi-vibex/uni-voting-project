@@ -1,0 +1,63 @@
+{
+  "users": [
+    {
+      "email": "oluseyiwmwm@gmail.com",
+      "password": "$2b$10$6ytcIwMHOK8fSp1VErrBuOq1LYdYkxgjrjiH9/uaZk92DqeObbkJi",
+      "verified": true,
+      "role": "admin",
+      "verificationToken": null
+    },
+    {
+      "email": "kylersilver6@gmail.com",
+      "password": "$2b$10$k.oaBmW4ryqYKLDHlv.Z2.n3.oTr5k.TOVZ4hlb3sJosbHOOwOJtO",
+      "verified": true,
+      "role": "user",
+      "verificationToken": null
+    }
+  ],
+  "candidates": [
+    {
+      "id": 1739728220794,
+      "name": "ADAMA SIMON",
+      "party": "NSNV",
+      "position": "President",
+      "votes": 2
+    },
+    {
+      "id": 1739728733256,
+      "name": "WESLEY",
+      "party": "OPUEH",
+      "position": "President",
+      "votes": 0
+    },
+    {
+      "id": 1739728775927,
+      "name": "IZU",
+      "party": "ASHAWO",
+      "position": "VIP",
+      "votes": 2
+    }
+  ],
+  "votes": [
+    {
+      "email": "oluseyiwmwm@gmail.com",
+      "candidateId": 1739728220794,
+      "position": "President"
+    },
+    {
+      "email": "oluseyiwmwm@gmail.com",
+      "candidateId": 1739728775927,
+      "position": "VIP"
+    },
+    {
+      "email": "kylersilver6@gmail.com",
+      "candidateId": 1739728220794,
+      "position": "President"
+    },
+    {
+      "email": "kylersilver6@gmail.com",
+      "candidateId": 1739728775927,
+      "position": "VIP"
+    }
+  ]
+}
