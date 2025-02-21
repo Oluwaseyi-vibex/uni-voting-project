@@ -8,13 +8,15 @@ import { JSONFile } from "lowdb/node";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
+import emailValidator from "email-validator";
 import dotenv from "dotenv";
-import crypto from "crypto"; // Import crypto for token generation
+import crypto from "crypto";
+import * as faceapi from "face-api.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -38,56 +40,172 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Register User with Email Verification
-app.post("/register", async (req, res) => {
-  await db.read(); // Ensure latest data
-  db.data ||= { users: [], candidates: [], votes: [] };
-  db.data.users ||= [];
+app.post("/register-face", async (req, res) => {
+  await db.read();
+  db.data.users = db.data.users || []; // Ensure users array exists
 
-  const { email, password } = req.body;
-  const userExists = db.data.users.find((u) => u.email === email);
+  const { name, email, matricNumber, password, faceDescriptor } = req.body;
+  // console.log(name, email, matricNumber, password);
 
-  if (userExists) {
-    return res.status(400).json({ message: "User already exists" });
+  // Check for missing fields
+  if (!name || !email || !matricNumber || !password || !faceDescriptor) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required." });
   }
 
+  // Validate email format
+  if (!emailValidator.validate(email)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid email format." });
+  }
+
+  // Check if email or matric number already exists
+  const existingUser = db.data.users.find(
+    (user) => user.email === email || user.matricNumber === matricNumber
+  );
+
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: "User already exists with this email or matric number.",
+    });
+  }
+
+  // Check for duplicate face
+  let isFaceDuplicate = false;
+  for (const user of db.data.users) {
+    if (user.faceDescriptor) {
+      const distance = faceapi.euclideanDistance(
+        user.faceDescriptor,
+        faceDescriptor
+      );
+      if (distance < 0.6) {
+        // Threshold for recognizing as the same face
+        isFaceDuplicate = true;
+        break;
+      }
+    }
+  }
+
+  if (isFaceDuplicate) {
+    return res.status(400).json({
+      success: false,
+      message: "Face already registered. You cannot create multiple accounts.",
+    });
+  }
+
+  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Generate a verification token
   const verificationToken = crypto.randomBytes(32).toString("hex");
 
-  db.data.users.push({
+  // Save user details
+  const newUser = {
+    name,
     email,
-    password: hashedPassword,
-    verified: false,
-    role: "user",
+    matricNumber,
+    password: hashedPassword, // Store hashed password
+    faceDescriptor,
+    verified: false, // Set to false until email is verified
     verificationToken,
-  });
-
-  await db.write();
-
-  const verifyLink = `${process.env.BASE_URL}/verify-email?token=${verificationToken}`;
-
-  // Send email
-  const mailOptions = {
-    from: `"E-Voting System" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Verify Your Email",
-    html: `<p>Click <a href="${verifyLink}">here</a> to verify your email.</p> <br/> <p> Click Login to login to your account after verification</p>`,
+    role: "user",
   };
 
+  db.data.users.push(newUser);
+  await db.write();
+  // Send verification email
+  const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
   try {
-    await transporter.sendMail(mailOptions);
-    res.status(201).json({
-      message: "Registration successful. Check your email for verification.",
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email",
+      html: `<p>Hello ${name},</p>
+             <p>Click the link below to verify your email:</p>
+             <a href="${verificationLink}">Verify Email</a>
+             <p>If you didn't request this, you can ignore this email.</p>`,
+    });
+
+    res.json({
+      success: true,
+      message:
+        "Registration successful. Please check your email to verify your account.",
     });
   } catch (error) {
-    res.status(500).json({ message: "Error sending verification email" });
+    console.error("Error sending email:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error sending verification email." });
+  }
+});
+
+// Face Authentication Endpoint
+// Face Authentication Endpoint
+app.post("/face-auth", async (req, res) => {
+  await db.read();
+  db.data.users = db.data.users || []; // Ensure users array exists
+
+  if (!db.data || !Array.isArray(db.data.users)) {
+    return res
+      .status(500)
+      .json({ success: false, message: "User database not initialized" });
+  }
+
+  const { descriptor } = req.body;
+  // console.log("descriptor:", descriptor);
+  if (!descriptor) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No face detected" });
+  }
+
+  let bestMatch = null;
+  let minDistance = 1.0; // Start with a high distance (worst match)
+
+  for (const user of db.data.users) {
+    if (user.faceDescriptor) {
+      console.log("Comparing with user:", user.email);
+      try {
+        const distance = faceapi.euclideanDistance(
+          user.faceDescriptor,
+          descriptor
+        );
+        if (distance < 0.6 && distance < minDistance) {
+          bestMatch = user;
+          minDistance = distance;
+        }
+      } catch (error) {
+        console.error("Error comparing face descriptors:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Error processing face authentication",
+        });
+      }
+    }
+  }
+
+  if (bestMatch) {
+    res.json({
+      success: true,
+      user: {
+        name: bestMatch.name,
+        email: bestMatch.email,
+        matricNumber: bestMatch.matricNumber,
+      },
+    });
+  } else {
+    res.json({ success: false, message: "Face not recognized" });
   }
 });
 
 // Login
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
+  console.log("Login Triggered");
   // Check if db.data or db.data.users is undefined
   if (!db.data || !db.data.users) {
     return res.status(500).json({ message: "Database not initialized" });
@@ -110,7 +228,12 @@ app.post("/login", async (req, res) => {
   const token = jwt.sign({ email, role: user.role }, "secret", {
     expiresIn: "1h",
   });
-  res.json({ token, role: user.role, message: "Login successful" });
+  res.json({
+    token,
+    name: user.name,
+    role: user.role,
+    message: "Login successful",
+  });
 });
 
 // Verify Email
@@ -174,6 +297,36 @@ app.post("/add-candidate", async (req, res) => {
     message: "Candidate added successfully",
     candidate: newCandidate,
   });
+});
+
+// Delete Candidate (Admin Only)
+app.delete("/delete-candidate/:id", async (req, res) => {
+  console.log("Deleting candidate...");
+  await db.read(); // Ensure the latest data is loaded
+
+  const candidateId = parseInt(req.params.id);
+  if (!candidateId) {
+    return res.status(400).json({ message: "Invalid candidate ID" });
+  }
+
+  const candidateIndex = db.data.candidates.findIndex(
+    (c) => c.id === candidateId
+  );
+  if (candidateIndex === -1) {
+    return res.status(404).json({ message: "Candidate not found" });
+  }
+
+  // Remove candidate
+  db.data.candidates.splice(candidateIndex, 1);
+
+  // Remove all votes related to this candidate
+  db.data.votes = db.data.votes.filter(
+    (vote) => vote.candidateId !== candidateId
+  );
+
+  await db.write(); // Save the changes to the database
+
+  res.json({ message: "Candidate and their votes deleted successfully" });
 });
 
 // Voting Endpoint
