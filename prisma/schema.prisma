@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  matricNumber      String   @unique
+  password          String
+  verified          Boolean  @default(false)
+  verificationToken String?
+  lastLoginIp       String?
+  lastLoginAt       DateTime?
+  role              String   @default("student")
+  votes     Vote[]  // 👈 This is the reverse relation
+
+}
+
+
+model IPLog {
+  id         Int      @id @default(autoincrement())
+  ipAddress  String
+  action     String   // e.g. "register", "login", "failed_login"
+  email      String?
+  timestamp  DateTime @default(now())
+}
+
+
+model Election {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  candidates  Candidate[]
+  votes       Vote[]     // 👈 Add this line
+
+}
+
+model Candidate {
+  id         Int        @id @default(autoincrement())
+  name       String
+  party      String
+  position   String
+  votesCount Int        @default(0)
+  election   Election   @relation(fields: [electionId], references: [id])
+  electionId Int
+  votes      Vote[]
+}
+
+model Vote {
+  id          Int        @id @default(autoincrement())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  candidate   Candidate  @relation(fields: [candidateId], references: [id])
+  candidateId Int
+  election    Election   @relation(fields: [electionId], references: [id])
+  electionId  Int
+  position    String
+}
