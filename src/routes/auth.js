@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import emailValidator from "email-validator";
 import transporter from "../utils/mailer.js";
+import { requireRole } from "../middleware/checkRole.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
