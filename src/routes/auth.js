@@ -24,13 +24,13 @@ function getClientIp(req) {
 // Create new Admin or Observer
 router.post(
   "/super-admin-create-user",
-  requireRole(["SUPER_ADMIN"]), // only super admins can do this
+  requireRole(["SUPER_ADMIN"]),
   [
     body("name").notEmpty(),
     body("email").isEmail(),
     body("matricNumber").notEmpty(),
     body("password").isLength({ min: 6 }),
-    body("role").isIn(["ADMIN", "OBSERVER"]), // restrict allowed roles
+    body("role").isIn(["ADMIN", "OBSERVER"]),
   ],
   async (req, res) => {
     const errors = validationResult(req);
