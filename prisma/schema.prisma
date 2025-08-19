@@ -24,9 +24,15 @@ model User {
   verificationToken String?
   lastLoginIp       String?
   lastLoginAt       DateTime?
-  role              String   @default("student")
-  votes     Vote[]  // 👈 This is the reverse relation
+  role              Role     @default(STUDENT)  // 👈 enum instead of plain string
+  votes             Vote[]
+}
 
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  OBSERVER
+  STUDENT
 }
 
 

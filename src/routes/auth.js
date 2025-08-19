@@ -20,6 +20,51 @@ function getClientIp(req) {
   );
 }
 
+// Create new Admin or Observer
+router.post(
+  "/super-admin-create-user",
+  requireRole(["SUPER_ADMIN"]), // only super admins can do this
+  [
+    body("name").notEmpty(),
+    body("email").isEmail(),
+    body("matricNumber").notEmpty(),
+    body("password").isLength({ min: 6 }),
+    body("role").isIn(["ADMIN", "OBSERVER"]), // restrict allowed roles
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const { name, email, matricNumber, password, role } = req.body;
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { matricNumber }],
+      },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        matricNumber,
+        password: hashedPassword,
+        role,
+        verified: true, // created by super admin, so auto-verified
+      },
+    });
+
+    res.json({ message: "User created successfully", user: newUser });
+  }
+);
+
 // Register route
 router.post(
   "/register",
