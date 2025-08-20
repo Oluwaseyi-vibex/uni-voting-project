@@ -13,9 +13,8 @@ export const getAllUsers = async (req, res) => {
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        matricNumber: true, // Available field
-        verified: true, // Available field
+        matricNumber: true,
+        verified: true,
       },
     });
 
