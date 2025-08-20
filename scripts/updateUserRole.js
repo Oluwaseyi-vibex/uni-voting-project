@@ -1,22 +1,33 @@
-// prisma/updateUserRole.js (or inside your route handler)
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-async function updateUserRole(userId, newRole) {
+const setSuperAdmin = async () => {
   try {
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { role: newRole },
+    const userEmail = "oluwaseyifunmi.kodeleyiri@student.uat.edu.ng"; // Replace with your actual email
+
+    const user = await prisma.user.update({
+      where: {
+        email: userEmail,
+      },
+      data: {
+        role: "SUPER_ADMIN",
+      },
     });
 
-    console.log("User role updated:", updatedUser);
+    console.log("✅ User updated successfully:");
+    console.log(`Email: ${user.email}`);
+    console.log(`Role: ${user.role}`);
+    console.log(`ID: ${user.id}`);
   } catch (error) {
-    console.error("Error updating user role:", error);
+    if (error.code === "P2025") {
+      console.log("❌ User not found with that email");
+    } else {
+      console.error("❌ Error updating user:", error.message);
+    }
   } finally {
     await prisma.$disconnect();
   }
-}
+};
 
-// Example: Change role of user with ID 1 to "admin"
-updateUserRole("c71d312b-d920-4b32-8eb6-f49a718f2717", "admin");
+setSuperAdmin();
