@@ -65,7 +65,7 @@ export const updateUserRole = async (req, res) => {
 
     // Check if user exists first
     const existingUser = await prisma.user.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: id },
     });
 
     if (!existingUser) {
