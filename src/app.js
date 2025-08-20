@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/auth.js";
 import electionRoutes from "./routes/elections.js";
 import voteRoutes from "./routes/vote.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -37,5 +38,6 @@ app.use(globalLimiter);
 app.use("/auth", authRoutes);
 app.use("/elections", electionRoutes);
 app.use("/vote", voteRoutes);
+app.use("/update", userRoutes);
 
 export default app;
