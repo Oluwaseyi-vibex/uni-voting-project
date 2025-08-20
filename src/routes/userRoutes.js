@@ -1,7 +1,6 @@
 import express from "express";
 import { updateUserRole, getAllUsers } from "../utils/userController.js";
-import { isSuperAdmin } from "../middleware/auth.js";
-
+import { isSuperAdmin } from "../middleware/superAdminAuth.js";
 const router = express.Router();
 
 // ✅ Fetch all users (Super Admin only)
