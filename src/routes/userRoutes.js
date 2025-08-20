@@ -8,6 +8,6 @@ const router = express.Router();
 router.get("/users", authenticate, isSuperAdmin, getAllUsers);
 
 // ✅ Update a user role (Super Admin only)
-router.put("/users/:id/role", isSuperAdmin, updateUserRole);
+router.put("/users/:id/role", authenticate, isSuperAdmin, updateUserRole);
 
 export default router;

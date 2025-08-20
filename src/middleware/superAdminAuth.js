@@ -4,7 +4,7 @@ export const isSuperAdmin = (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized. User not found." });
   }
 
-  if (req.user.role !== "STUDENT") {
+  if (req.user.role !== "SUPER_ADMIN") {
     return res
       .status(403)
       .json({ message: "Access denied. Super admin only." });
