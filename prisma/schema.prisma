@@ -13,19 +13,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id                String   @id @default(uuid())
+  id                String     @id @default(uuid())
   name              String
-  email             String   @unique
-  matricNumber      String   @unique
+  email             String     @unique
+  matricNumber      String     @unique
   password          String
-  verified          Boolean  @default(false)
+  verified          Boolean    @default(false)
   verificationToken String?
   lastLoginIp       String?
   lastLoginAt       DateTime?
-  role              Role     @default(STUDENT)  // 👈 enum instead of plain string
+  role              Role       @default(STUDENT) // 👈 enum instead of plain string
   votes             Vote[]
+  auditLogs         AuditLog[]
 }
 
 enum Role {
@@ -35,15 +35,13 @@ enum Role {
   STUDENT
 }
 
-
 model IPLog {
-  id         Int      @id @default(autoincrement())
-  ipAddress  String
-  action     String   // e.g. "register", "login", "failed_login"
-  email      String?
-  timestamp  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  ipAddress String
+  action    String // e.g. "register", "login", "failed_login"
+  email     String?
+  timestamp DateTime @default(now())
 }
-
 
 model Election {
   id          Int         @id @default(autoincrement())
@@ -51,28 +49,42 @@ model Election {
   description String?
   createdAt   DateTime    @default(now())
   candidates  Candidate[]
-  votes       Vote[]     // 👈 Add this line
-
+  votes       Vote[] // 👈 Add this line
 }
 
 model Candidate {
-  id         Int        @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   name       String
   party      String
   position   String
-  votesCount Int        @default(0)
-  election   Election   @relation(fields: [electionId], references: [id])
+  votesCount Int      @default(0)
+  election   Election @relation(fields: [electionId], references: [id])
   electionId Int
   votes      Vote[]
 }
 
 model Vote {
-  id          Int        @id @default(autoincrement())
-  user        User       @relation(fields: [userId], references: [id])
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
   userId      String
-  candidate   Candidate  @relation(fields: [candidateId], references: [id])
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
   candidateId Int
-  election    Election   @relation(fields: [electionId], references: [id])
+  election    Election  @relation(fields: [electionId], references: [id])
   electionId  Int
   position    String
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     String? // optional, in case action is system-generated
+  action     String // e.g. CREATE_ELECTION, UPDATE_USER, CAST_VOTE
+  entityType String? // e.g. "Election", "User", "Candidate"
+  entityId   String? // store ID of affected entity as string for flexibility
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }
