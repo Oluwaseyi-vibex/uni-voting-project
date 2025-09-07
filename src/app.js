@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.js";
 import electionRoutes from "./routes/elections.js";
 import voteRoutes from "./routes/vote.js";
 import userRoutes from "./routes/userRoutes.js";
+import auditRoutes from "./routes/auditLogs.js";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -39,5 +40,6 @@ app.use("/auth", authRoutes);
 app.use("/elections", electionRoutes);
 app.use("/vote", voteRoutes);
 app.use("/update", userRoutes);
+app.use("/admin", auditRoutes);
 
 export default app;
