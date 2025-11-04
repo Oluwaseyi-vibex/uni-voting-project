@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
-    "migrate": "prisma migrate dev"
-  },
+"scripts": {
+  "build": "prisma generate",
+  "start": "npm run migrate && node index.js",
+  "migrate": "prisma migrate deploy"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
