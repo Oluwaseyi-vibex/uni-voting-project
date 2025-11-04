@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const userId = 4; // Change this to the actual ID you want to delete
+  const userId = "5c77b601-4818-4972-92e4-07f1005d10b5"; // Change this to the actual ID you want to delete
 
   // Delete related votes first if needed
   await prisma.vote.deleteMany({ where: { userId } });
