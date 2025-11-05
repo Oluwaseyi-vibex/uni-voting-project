@@ -74,7 +74,13 @@ router.post(
 
     const link = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-    await transporter.sendMail({
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL_USER,
+    //   to: email,
+    //   subject: "Verify Your Email",
+    //   html: `<p>Hello ${name}, click <a href="${link}">here</a> to verify your email address.</p>`,
+    // });
+    await transporter.emails.send({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Verify Your Email",
