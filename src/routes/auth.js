@@ -5,8 +5,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import emailValidator from "email-validator";
-import transporter from "../utils/mailer.js";
-import { requireRole } from "../middleware/checkRole.js";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -80,11 +81,12 @@ router.post(
     //   subject: "Verify Your Email",
     //   html: `<p>Hello ${name}, click <a href="${link}">here</a> to verify your email address.</p>`,
     // });
-    await transporter.emails.send({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify Your Email",
-      html: `<p>Hello ${name}, click <a href="${link}">here</a> to verify your email address.</p>`,
+    await resend.emails.send({
+      from: "Your App <onboarding@resend.dev>",
+      to: user.email, // or whatever variable holds the recipient’s email
+      subject: "Verify your account",
+      html: `<p>Hi ${user.name}, please verify your account by clicking the link below.</p>
+         <a href="${verificationLink}">Verify Account</a>`,
     });
 
     res.json({ message: "Registration successful. Please verify your email." });
