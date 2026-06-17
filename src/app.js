@@ -34,7 +34,8 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     }
-    return callback(new Error("Not allowed by CORS"));
+    // Deny CORS requests gracefully without throwing an error (throwing causes a 500 and no CORS headers)
+    return callback(null, false);
   },
   credentials: true,
   optionsSuccessStatus: 200,
