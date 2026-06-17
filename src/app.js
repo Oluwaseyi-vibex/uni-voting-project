@@ -28,6 +28,11 @@ main().catch((e) => {
 app.use(cors());
 app.use(bodyParser.json());
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
+});
+
 // Rate limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
