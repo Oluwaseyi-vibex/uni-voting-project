@@ -25,7 +25,23 @@ main().catch((e) => {
   process.exit(1);
 });
 
-app.use(cors());
+// Configure CORS to allow only the frontend origin and support credentials
+const allowedOrigins = [process.env.FRONTEND_URL || "https://uatvote.vercel.app"];
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(bodyParser.json());
 
 // Health check endpoint
